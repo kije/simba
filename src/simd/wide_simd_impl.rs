@@ -18,6 +18,7 @@ use std::{
         RemAssign, Sub, SubAssign,
     },
 };
+use std::ops::{Deref, DerefMut};
 use wide::{CmpEq, CmpGe, CmpGt, CmpLe, CmpLt, CmpNe};
 
 #[cfg(feature = "rkyv")]
@@ -381,6 +382,20 @@ macro_rules! impl_wide_f32 (
             }
         }
 
+        impl Deref for $WideF32xX {
+            type Target = wide::$f32xX;
+
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+
+        impl DerefMut for $WideF32xX {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.0
+            }
+        }
+
         impl From<[$f32; $lanes]> for $WideF32xX {
             #[inline(always)]
             fn from(vals: [$f32; $lanes]) -> Self {
@@ -414,6 +429,20 @@ macro_rules! impl_wide_f32 (
             #[inline(always)]
             fn is_in_subset(_: &Self) -> bool {
                 true
+            }
+        }
+
+        impl Deref for $WideBoolF32xX {
+            type Target = wide::$f32xX;
+
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+
+        impl DerefMut for $WideBoolF32xX {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.0
             }
         }
 

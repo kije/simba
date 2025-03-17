@@ -396,6 +396,13 @@ macro_rules! impl_wide_f32 (
             }
         }
 
+        impl From<wide::$f32xX> for $WideF32xX {
+            #[inline(always)]
+            fn from(vals: wide::$f32xX) -> Self {
+                $WideF32xX(vals)
+            }
+        }
+
         impl From<[$f32; $lanes]> for $WideF32xX {
             #[inline(always)]
             fn from(vals: [$f32; $lanes]) -> Self {
@@ -454,6 +461,13 @@ macro_rules! impl_wide_f32 (
                     bits[vals[0] as usize],
                     $(bits[vals[$ii] as usize]),*
                 ]))
+            }
+        }
+
+        impl From<wide::$f32xX> for $WideBoolF32xX {
+            #[inline(always)]
+            fn from(vals: wide::$f32xX) -> Self {
+                $WideBoolF32xX(vals)
             }
         }
 
@@ -578,11 +592,30 @@ macro_rules! impl_wide_f32 (
             }
         }
 
+        impl<'a> Add<&'a $WideF32xX> for  $WideF32xX  {
+            type Output = Self;
+
+            #[inline(always)]
+            fn add(self, rhs: &'a $WideF32xX) -> Self {
+                Self(self.0 + rhs.0)
+            }
+        }
+
         impl Sub<$WideF32xX> for $WideF32xX {
             type Output = Self;
 
             #[inline(always)]
             fn sub(self, rhs: Self) -> Self {
+                Self(self.0 - rhs.0)
+            }
+        }
+
+
+        impl<'a> Sub<&'a $WideF32xX> for $WideF32xX {
+            type Output = Self;
+
+            #[inline(always)]
+            fn sub(self, rhs: &'a $WideF32xX) -> Self {
                 Self(self.0 - rhs.0)
             }
         }
@@ -596,11 +629,29 @@ macro_rules! impl_wide_f32 (
             }
         }
 
+        impl<'a> Mul<&'a $WideF32xX> for $WideF32xX {
+            type Output = Self;
+
+            #[inline(always)]
+            fn mul(self, rhs: &'a $WideF32xX) -> Self {
+                Self(self.0 * rhs.0)
+            }
+        }
+
         impl Div<$WideF32xX> for $WideF32xX {
             type Output = Self;
 
             #[inline(always)]
             fn div(self, rhs: Self) -> Self {
+                Self(self.0 / rhs.0)
+            }
+        }
+
+        impl<'a> Div<&'a $WideF32xX> for $WideF32xX {
+            type Output = Self;
+
+            #[inline(always)]
+            fn div(self, rhs: &'a $WideF32xX) -> Self {
                 Self(self.0 / rhs.0)
             }
         }
@@ -611,6 +662,15 @@ macro_rules! impl_wide_f32 (
             #[inline(always)]
             fn rem(self, rhs: Self) -> Self {
                 self.zip_map(rhs, |a, b| a % b)
+            }
+        }
+
+        impl<'a> Rem<&'a $WideF32xX> for $WideF32xX {
+            type Output = Self;
+
+            #[inline(always)]
+            fn rem(self, rhs: &'a $WideF32xX) -> Self {
+                self.zip_map(*rhs, |a, b| a % b)
             }
         }
 
@@ -1535,6 +1595,411 @@ macro_rules! impl_wide_f32 (
                 ((one + self).simd_ln() - (one - self).simd_ln()) / two
             }
         }
+
+        // pallette impls
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Real for $WideF32xX {
+            #[inline(always)]
+            fn from_f64(n: f64) -> Self {
+               Self::from_subset(&n)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Zero for $WideF32xX {
+            #[inline(always)]
+            fn zero() -> Self {
+                <Self as Zero>::zero()
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::One for $WideF32xX {
+            #[inline(always)]
+            fn one() -> Self {
+                <Self as One>::one()
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::MinMax for $WideF32xX {
+            #[inline(always)]
+            fn min(self, other: Self) -> Self {
+                self.simd_min(other)
+            }
+
+            #[inline(always)]
+            fn max(self, other: Self) -> Self {
+                self.simd_max(other)
+            }
+
+            #[inline(always)]
+            fn min_max(self, other: Self) -> (Self, Self){
+                (self.simd_min(other), self.simd_max(other))
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Clamp for $WideF32xX {
+            #[inline(always)]
+            fn clamp(self, min: Self, max: Self) -> Self {
+                self.simd_clamp(min, max)
+            }
+
+            #[inline(always)]
+            fn clamp_min(self, min: Self) -> Self{
+                self.simd_max(min)
+            }
+
+
+            #[inline(always)]
+            fn clamp_max(self, max: Self) -> Self{
+                self.simd_min(max)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::ClampAssign for $WideF32xX {
+            #[inline(always)]
+            fn clamp_assign(&mut self, min: Self, max: Self) {
+                *self = self.simd_clamp(min, max);
+            }
+
+            #[inline(always)]
+            fn clamp_min_assign(&mut self, min: Self){
+                *self = self.simd_max(min);
+            }
+
+
+            #[inline(always)]
+            fn clamp_max_assign(&mut self, max: Self){
+                *self = self.simd_min(max);
+            }
+        }
+
+
+        #[cfg(feature = "palette")]
+        impl ::palette::bool_mask::HasBoolMask for $WideF32xX {
+           type Mask = $WideBoolF32xX;
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::bool_mask::BoolMask for $WideBoolF32xX {
+            #[inline(always)]
+            fn from_bool(value: bool) -> Self {
+                Self::from([value; $lanes])
+            }
+
+            #[inline(always)]
+            fn is_true(&self) -> bool {
+                self.all()
+            }
+
+            #[inline(always)]
+            fn is_false(&self) -> bool{
+                self.none()
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::PartialCmp for $WideF32xX {
+            #[inline(always)]
+            fn lt(&self, other: &Self) -> Self::Mask{
+                self.simd_lt(*other)
+            }
+            #[inline(always)]
+            fn lt_eq(&self, other: &Self) -> Self::Mask {
+                self.simd_le(*other)
+            }
+            #[inline(always)]
+            fn eq(&self, other: &Self) -> Self::Mask {
+                self.simd_eq(*other)
+            }
+            #[inline(always)]
+            fn neq(&self, other: &Self) -> Self::Mask {
+                self.simd_ne(*other)
+            }
+            #[inline(always)]
+            fn gt_eq(&self, other: &Self) -> Self::Mask {
+                self.simd_ge(*other)
+            }
+            #[inline(always)]
+            fn gt(&self, other: &Self) -> Self::Mask {
+                self.simd_gt(*other)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Abs for $WideF32xX {
+            #[inline(always)]
+            fn abs(self) -> Self {
+                self.simd_abs()
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Cbrt for $WideF32xX {
+            #[inline(always)]
+            fn cbrt(self) -> Self {
+                self.simd_cbrt()
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Exp for $WideF32xX {
+            #[inline(always)]
+            fn exp(self) -> Self {
+                self.simd_exp()
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Ln for $WideF32xX {
+            #[inline(always)]
+            fn ln(self) -> Self {
+                self.simd_ln()
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Powf for $WideF32xX {
+            #[inline(always)]
+            fn powf(self, exp: Self) -> Self {
+                self.simd_powf(exp)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Powi for $WideF32xX {
+            #[inline(always)]
+            fn powi(self, exp: i32) -> Self {
+                self.simd_powi(exp)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Recip for $WideF32xX {
+            #[inline(always)]
+            fn recip(self) -> Self {
+                self.simd_recip()
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Signum for $WideF32xX {
+            #[inline(always)]
+            fn signum(self) -> Self {
+                self.simd_signum()
+            }
+        }
+
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Round for $WideF32xX {
+            #[inline(always)]
+            fn round(self) -> Self {
+                self.simd_round()
+            }
+
+            #[inline(always)]
+            fn floor(self) -> Self {
+                self.simd_floor()
+            }
+
+            #[inline(always)]
+            fn ceil(self) -> Self {
+                self.simd_ceil()
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::IsValidDivisor for $WideF32xX {
+            #[inline(always)]
+            fn is_valid_divisor(&self) -> Self::Mask {
+                self.simd_ne(Self::from_subset(&0.0)) & self.simd_ne(Self::from_subset(&-0.0)) & $WideBoolF32xX(self.0.is_finite())
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::MulAdd for $WideF32xX {
+            #[inline(always)]
+            fn mul_add(self, m: Self, a: Self) -> Self {
+                self.simd_mul_add(m, a)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::MulSub for $WideF32xX {
+            #[inline(always)]
+            fn mul_sub(self, m: Self, s: Self) -> Self {
+                self.simd_mul_add(m, -s)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::FromScalar for $WideF32xX {
+            type Scalar = $f32;
+
+            #[inline(always)]
+            fn from_scalar(scalar: Self::Scalar) -> Self {
+                Self::from_subset(&scalar)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::FromScalarArray<$lanes> for $WideF32xX {
+            #[inline(always)]
+            fn from_array(scalars: [Self::Scalar; $lanes]) -> Self {
+                Self::from(scalars)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::IntoScalarArray<$lanes> for $WideF32xX {
+            #[inline(always)]
+            fn into_array(self) ->  [Self::Scalar; $lanes] {
+                self.into()
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Hypot for $WideF32xX {
+            #[inline(always)]
+            fn hypot(self, other: Self) -> Self {
+                self.simd_hypot(other)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Sqrt for $WideF32xX {
+            #[inline(always)]
+            fn sqrt(self) -> Self {
+                self.simd_sqrt()
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::angle::HalfRotation for $WideF32xX {
+            #[inline(always)]
+            fn half_rotation() -> Self {
+                Self::from_subset(&180.0)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::angle::FullRotation for $WideF32xX {
+            #[inline(always)]
+            fn full_rotation() -> Self {
+                Self::from_subset(&360.0)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::angle::RealAngle for $WideF32xX {
+            #[inline(always)]
+            fn degrees_to_radians(self) -> Self {
+                let rads_per_degree = Self::simd_pi() / Self::from_subset(&180.0);
+                self * rads_per_degree
+            }
+
+            #[inline(always)]
+            fn radians_to_degrees(self) -> Self {
+                let pis_in_180 = Self::from_subset(&57.2957795130823208767981548141051703_f32);
+                self * pis_in_180
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::angle::AngleEq for $WideF32xX {
+            #[inline(always)]
+            fn angle_eq(&self, other: &Self) -> Self::Mask {
+                use ::palette::angle::UnsignedAngle;
+                self.normalize_unsigned_angle().simd_eq(other.normalize_unsigned_angle())
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::angle::SignedAngle for $WideF32xX {
+            #[inline(always)]
+            fn normalize_signed_angle(self) -> Self {
+                self - ::palette::num::Round::ceil(((self + Self::from_subset(&180.0)) / Self::from_subset(&360.0)) - Self::from_subset(&1.0)) * Self::from_subset(&360.0)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::angle::UnsignedAngle for $WideF32xX {
+            #[inline(always)]
+            fn normalize_unsigned_angle(self) -> Self {
+                self - (::palette::num::Round::floor(self / Self::from_subset(&360.0)) * Self::from_subset(&360.0))
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl ::palette::num::Trigonometry for $WideF32xX {
+            #[inline(always)]
+            fn sin(self) -> Self {
+                self.simd_sin()
+            }
+
+            #[inline(always)]
+            fn cos(self) -> Self {
+                self.simd_cos()
+            }
+
+            #[inline(always)]
+            fn sin_cos(self) -> (Self, Self) {
+                (self.simd_sin(), self.simd_cos())
+            }
+
+            #[inline(always)]
+            fn tan(self) -> Self {
+                self.simd_tan()
+            }
+
+            #[inline(always)]
+            fn asin(self) -> Self {
+                self.simd_asin()
+            }
+
+            #[inline(always)]
+            fn acos(self) -> Self {
+                self.simd_acos()
+            }
+
+
+            #[inline(always)]
+            fn atan(self) -> Self {
+                self.simd_atan()
+            }
+
+
+            #[inline(always)]
+            fn atan2(self, other: Self) -> Self {
+                self.simd_atan2(other)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl<T> ::palette::bool_mask::Select<T>  for $WideBoolF32xX where T: ::palette::bool_mask::HasBoolMask<Mask = Self> + SimdValue<SimdBool = Self>, {
+            #[inline(always)]
+            fn select(self, a: T, b: T) -> T {
+                SimdValue::select(a, self, b)
+            }
+        }
+
+        #[cfg(feature = "palette")]
+        impl<T> ::palette::bool_mask::LazySelect<T>  for $WideBoolF32xX where T: ::palette::bool_mask::HasBoolMask<Mask = Self> + SimdValue<SimdBool = Self>, {
+            #[inline(always)]
+            fn lazy_select<A, B>(self, a: A, b: B) -> T
+            where
+                A: FnOnce() -> T,
+                B: FnOnce() -> T,
+            {
+                self.if_else(a, b)
+            }
+        }
+
     }
 );
 

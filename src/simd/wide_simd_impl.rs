@@ -243,14 +243,14 @@ macro_rules! impl_wide_f32 (
         }
 
         impl PartialEq for $WideF32xX {
-            #[inline]
+            #[inline(always)]
             fn eq(&self, rhs: &Self) -> bool {
                 self.0 == rhs.0
             }
         }
 
         impl PartialEq for $WideBoolF32xX {
-            #[inline]
+            #[inline(always)]
             fn eq(&self, rhs: &Self) -> bool {
                 self.0 == rhs.0
             }
@@ -259,17 +259,35 @@ macro_rules! impl_wide_f32 (
         impl Not for $WideBoolF32xX {
             type Output = Self;
 
-            #[inline]
+            #[inline(always)]
             fn not(self) -> Self {
                 Self(!self.0)
+            }
+        }
+
+        impl<'a> Not for &'a $WideBoolF32xX {
+            type Output = $WideBoolF32xX;
+
+            #[inline(always)]
+            fn not(self) -> $WideBoolF32xX {
+                $WideBoolF32xX(!self.0)
             }
         }
 
         impl BitXor for $WideBoolF32xX {
             type Output = Self;
 
-            #[inline]
+            #[inline(always)]
             fn bitxor(self, rhs: Self) -> Self {
+                Self(self.0 ^ rhs.0)
+            }
+        }
+
+        impl<'a> BitXor<&'a $WideBoolF32xX> for $WideBoolF32xX {
+            type Output = Self;
+
+            #[inline(always)]
+            fn bitxor(self, rhs: &'a $WideBoolF32xX) -> Self {
                 Self(self.0 ^ rhs.0)
             }
         }
@@ -277,8 +295,17 @@ macro_rules! impl_wide_f32 (
         impl BitOr for $WideBoolF32xX {
             type Output = Self;
 
-            #[inline]
+            #[inline(always)]
             fn bitor(self, rhs: Self) -> Self {
+                Self(self.0 | rhs.0)
+            }
+        }
+
+        impl<'a> BitOr<&'a $WideBoolF32xX> for $WideBoolF32xX {
+            type Output = Self;
+
+            #[inline(always)]
+            fn bitor(self, rhs: &'a $WideBoolF32xX) -> Self {
                 Self(self.0 | rhs.0)
             }
         }
@@ -286,8 +313,17 @@ macro_rules! impl_wide_f32 (
         impl BitAnd for $WideBoolF32xX {
             type Output = Self;
 
-            #[inline]
+            #[inline(always)]
             fn bitand(self, rhs: Self) -> Self {
+                Self(self.0 & rhs.0)
+            }
+        }
+        
+        impl<'a> BitAnd<&'a $WideBoolF32xX> for $WideBoolF32xX {
+            type Output = Self;
+
+            #[inline(always)]
+            fn bitand(self, rhs: &'a $WideBoolF32xX) -> Self {
                 Self(self.0 & rhs.0)
             }
         }

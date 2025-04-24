@@ -318,7 +318,7 @@ macro_rules! impl_wide_f32 (
                 Self(self.0 & rhs.0)
             }
         }
-        
+
         impl<'a> BitAnd<&'a $WideBoolF32xX> for $WideBoolF32xX {
             type Output = Self;
 
@@ -446,6 +446,13 @@ macro_rules! impl_wide_f32 (
             }
         }
 
+        impl From<$f32> for $WideF32xX {
+            #[inline(always)]
+            fn from(val: $f32) -> Self {
+                $WideF32xX(wide::$f32xX::from(val))
+            }
+        }
+
         impl From<$WideF32xX> for [$f32; $lanes] {
             #[inline(always)]
             fn from(val: $WideF32xX) -> [$f32; $lanes] {
@@ -504,6 +511,13 @@ macro_rules! impl_wide_f32 (
             #[inline(always)]
             fn from(vals: wide::$f32xX) -> Self {
                 $WideBoolF32xX(vals)
+            }
+        }
+
+        impl From<bool> for $WideBoolF32xX {
+            #[inline(always)]
+            fn from(val: bool) -> Self {
+                $WideBoolF32xX::from([val; $lanes])
             }
         }
 

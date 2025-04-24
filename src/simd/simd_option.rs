@@ -22,6 +22,7 @@ use crate::simd::{SimdBool, SimdValue};
 //}
 
 /// Generalization of Option for SIMD computation.
+#[derive(Clone, Copy, Debug, Default)]
 pub struct SimdOption<V: SimdValue> {
     val: V,
     mask: V::SimdBool,

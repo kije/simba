@@ -79,4 +79,10 @@ impl<V: SimdValue> SimdOption<V> {
     pub fn simd_unwrap_or(self, other: impl FnOnce() -> V) -> V {
         self.val.select(self.mask, other())
     }
+
+    /// Constructs a "None".
+    #[inline(always)]
+    pub fn none() -> Self where V: Default, V::SimdBool: From<bool>  {
+        Self::new(V::default(), false.into())
+    }
 }
